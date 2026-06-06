@@ -1,40 +1,13 @@
-name: Build A2N Kernel
+- name: Fix permissions
+  run: |
+    chmod -R +x toolchain/
+    chmod -R +x scripts/
 
-on:
-  workflow_dispatch:
+- name: Create config
+  run: |
+    make ARCH=arm64 exynos8895-dreamlte_defconfig
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y \
-          build-essential \
-          bc \
-          bison \
-          flex \
-          libssl-dev \
-          libelf-dev \
-          python3
-
-    - name: Create config
-      run: |
-        make ARCH=arm64 exynos8895-dreamlte_defconfig
-
-    - name: Build kernel
-      run: |
-        make ARCH=arm64 -j$(nproc)
-
-    - name: Upload Image
-      uses: actions/upload-artifact@v4
-      with:
-        name: kernel-image
-        path: |
-          arch/arm64/boot/Image
-          arch/arm64/boot/Image.gz
+- name: Build
+  run: |
+    export ANDROID_MAJOR_VERSION=9
+    make ARCH=arm64 -j4
