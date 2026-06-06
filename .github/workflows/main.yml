@@ -5,10 +5,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v4
 
       - name: Install dependencies
@@ -21,26 +21,35 @@ jobs:
             flex \
             libssl-dev \
             libelf-dev \
-            python3
+            python3 \
+            zip \
+            unzip
 
       - name: Fix permissions
         run: |
-          chmod -R +x toolchain/
-          chmod -R +x scripts/
+          chmod -R +x toolchain/ || true
+          chmod -R +x scripts/ || true
+          chmod +x arch/arm64/kernel/vdso/gen_vdso_offsets.sh || true
 
-      - name: Create config
+      - name: Patch DTC yylloc issue
         run: |
+          sed -i 's/^YYLTYPE yylloc;/extern YYLTYPE yylloc;/g' scripts/dtc/dtc-lexer.l || true
+
+      - name: Create kernel config
+        run: |
+          export ANDROID_MAJOR_VERSION=9
           make ARCH=arm64 exynos8895-dreamlte_defconfig
 
-      - name: Build
+      - name: Build kernel
         run: |
           export ANDROID_MAJOR_VERSION=9
           make ARCH=arm64 -j4
 
-      - name: Upload kernel
+      - name: Upload kernel artifacts
         uses: actions/upload-artifact@v4
         with:
           name: kernel-output
           path: |
             arch/arm64/boot/Image
             arch/arm64/boot/Image.gz
+            arch/arm64/boot/Image.gz-dtb
