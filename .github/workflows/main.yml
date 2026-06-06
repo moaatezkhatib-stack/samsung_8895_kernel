@@ -1,4 +1,10 @@
 name: Build Kernel
+run : |
+  export ARCH=arm64
+  mkdir -p out
+
+  make 0=out exynos8895_defconfig
+  makeout 0=out -j$(nproc)
 
 on:
   workflow_dispatch:
