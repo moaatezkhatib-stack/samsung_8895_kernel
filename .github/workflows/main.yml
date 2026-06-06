@@ -1,10 +1,4 @@
-name: Build Kernel
-run : |
-  export ARCH=arm64
-  mkdir -p out
-
-  make 0=out exynos8895_defconfig
-  makeout 0=out -j$(nproc)
+name: Build A2N Kernel
 
 on:
   workflow_dispatch:
@@ -17,7 +11,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Install packages
+    - name: Install dependencies
       run: |
         sudo apt update
         sudo apt install -y \
@@ -26,14 +20,21 @@ jobs:
           bison \
           flex \
           libssl-dev \
-          git
+          libelf-dev \
+          python3
 
-    - name: Build
+    - name: Create config
       run: |
-        make -j$(nproc)
+        make ARCH=arm64 exynos8895-dreamlte_defconfig
 
-    - name: Upload
+    - name: Build kernel
+      run: |
+        make ARCH=arm64 -j$(nproc)
+
+    - name: Upload Image
       uses: actions/upload-artifact@v4
       with:
-        name: kernel-output
-        path: .
+        name: kernel-image
+        path: |
+          arch/arm64/boot/Image
+          arch/arm64/boot/Image.gz
