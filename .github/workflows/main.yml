@@ -1,0 +1,33 @@
+name: Build Kernel
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install packages
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          build-essential \
+          bc \
+          bison \
+          flex \
+          libssl-dev \
+          git
+
+    - name: Build
+      run: |
+        make -j$(nproc)
+
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: kernel-output
+        path: .
